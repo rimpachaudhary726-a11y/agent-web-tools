@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bouncing Ball</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #111;
+        }
+        #canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const ball = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 30,
+                vx: 4,
+                vy: 3,
+                color: getRandomColor()
+            };
+
+            function getRandomColor() {
+                const r = Math.floor(Math.random() * 256);
+                const g = Math.floor(Math.random() * 256);
+                const b = Math.floor(Math.random() * 256);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function drawBall() {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+            }
+
+            function update() {
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                // Collision with left or right walls
+                if (ball.x - ball.radius <= 0) {
+                    ball.x = ball.radius;
+                    ball.vx = -ball.vx;
+                    ball.color = getRandomColor();
+                } else if (ball.x + ball.radius >= canvas.width) {
+                    ball.x = canvas.width - ball.radius;
+                    ball.vx = -ball.vx;
+                    ball.color = getRandomColor();
+                }
+
+                // Collision with top or bottom walls
+                if (ball.y - ball.radius <= 0) {
+                    ball.y = ball.radius;
+                    ball.vy = -ball.vy;
+                    ball.color = getRandomColor();
+                } else if (ball.y + ball.radius >= canvas.height) {
+                    ball.y = canvas.height - ball.radius;
+                    ball.vy = -ball.vy;
+                    ball.color = getRandomColor();
+                }
+            }
+
+            function loop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                update();
+                drawBall();
+                requestAnimationFrame(loop);
+            }
+
+            requestAnimationFrame(loop);
+        })();
+    </script>
+</body>
+</html>
