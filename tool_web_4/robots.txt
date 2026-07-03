@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_4/sitemap.xml
