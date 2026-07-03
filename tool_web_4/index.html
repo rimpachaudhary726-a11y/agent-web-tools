@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solar Odyssey – Interactive 3D Solar System</title>
+<meta name="description" content="Explore the solar system in real time. Fly through the stars, orbit the planets and feel the cosmos with Three.js and smooth free‑flight controls.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-primary: #0d47a1;
+  --color-accent: #ff6f00;
+  --color-bg: #f0f4ff;
+  --color-text: #212121;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #90caf9;
+    --color-accent: #ffab40;
+    --color-bg: #121212;
+    --color-text: #e0e0e0;
+  }
+}
+*,
+*::before,
+*::after {box-sizing:border-box;margin:0;padding:0;}
+html {scroll-behavior:smooth;}
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  opacity:1;
+  transition:opacity .6s ease;
+}
+body.loaded {opacity:1;}
+header {
+  background: var(--color-primary);
+  color:#fff;
+  padding:1rem clamp(1rem,4vw,2rem);
+  position:sticky; top:0; z-index:10;
+}
+nav {
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+nav .logo {font-family:var(--font-display);font-size:1.5rem;}
+nav ul {
+  list-style:none;
+  display:flex;
+  gap:1.5rem;
+}
+nav a {
+  color:#fff;
+  text-decoration:none;
+  font-weight:500;
+  position:relative;
+}
+nav a::after{
+  content:"";
+  position:absolute;
+  left:0; bottom:-3px;
+  width:0; height:2px;
+  background:#fff;
+  transition:width .3s;
+}
+nav a:hover::after,nav a:focus-visible::after{width:100%;}
+nav a:focus-visible{outline:2px solid #fff;outline-offset:2px;}
+nav .menu-toggle{
+  display:none;
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:1.5rem;
+}
+@media (max-width:768px){
+  nav ul{display:none;flex-direction:column;background:var(--color-primary);position:absolute;right:0;top:100%;width:200px;padding:1rem;}
+  nav ul.show{display:flex;}
+  nav .menu-toggle{display:block;}
+}
+h1, h2 {font-family:var(--font-display);}
+h1{font-size:clamp(2rem,8vw,4rem);}
+h2{font-size:clamp(1.5rem,5vw,2.5rem);margin-bottom:1rem;}
+section{padding:4rem clamp(1rem,4vw,2rem);}
+.container{max-width:1200px;margin:auto;}
+.hero{
+  background:linear-gradient(135deg,var(--color-primary),#1976d2);
+  color:#fff;
+  text-align:center;
+  padding:8rem 1rem;
+}
+.hero button{
+  margin-top:1.5rem;
+  padding:.75rem 1.5rem;
+  font-size:1rem;
+  background:var(--color-accent);
+  border:none;
+  color:#fff;
+  cursor:pointer;
+  border-radius:4px;
+  transition:background .3s;
+}
+.hero button:hover,
+.hero button:focus-visible{
+  background:#e65100;
+}
+#solar{position:relative;height:80vh;overflow:hidden;}
+#solar canvas{display:block;width:100%;height:100%;}
+#overlay{
+  position:fixed;
+  top:1rem; left:1rem;
+  background:rgba(0,0,0,0.5);
+  color:#fff;
+  padding:.5rem 1rem;
+  border-radius:4px;
+  font-size:.9rem;
+  pointer-events:none;
+}
+#resetBtn{
+  position:fixed;
+  bottom:1rem; right:1rem;
+  background:var(--color-accent);
+  color:#fff;
+  border:none;
+  padding:.75rem 1rem;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:.9rem;
+}
+#resetBtn:focus-visible{outline:2px solid #fff;}
+footer{
+  background:#212121;
+  color:#ccc;
+  text-align:center;
+  padding:2rem 1rem;
+}
+footer a{color:#ff6f00;text-decoration:none;}
+footer a:hover,footer a:focus-visible{text-decoration:underline;}
+form{
+  display:flex;
+  flex-direction:column;
+  gap:.75rem;
+  max-width:500px;
+  margin:auto;
+}
+input,textarea{
+  padding:.5rem;
+  border:1px solid #aaa;
+  border-radius:4px;
+  font:inherit;
+}
+button[type=submit]{
+  background:var(--color-primary);
+  color:#fff;
+  border:none;
+  padding:.75rem;
+  cursor:pointer;
+  border-radius:4px;
+}
+button[type=submit]:hover,button[type=submit]:focus-visible{background:#1565c0;}
+</style>
+<meta property="og:title" content="Solar Odyssey – Interactive 3D Solar System">
+<meta property="og:description" content="Explore the solar system in real time. Fly through the stars, orbit the planets and feel the cosmos with Three.js and smooth free‑flight controls.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_4/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Solar Odyssey – Interactive 3D Solar System">
+<meta name="twitter:description" content="Explore the solar system in real time. Fly through the stars, orbit the planets and feel the cosmos with Three.js and smooth free‑flight controls.">
+<link rel="canonical" href="https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_4/">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Solar Odyssey \u2013 Interactive 3D Solar System", "description": "Explore the solar system in real time. Fly through the stars, orbit the planets and feel the cosmos with Three.js and smooth free\u2011flight controls.", "url": "https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_4/"}</script>
+</head>
+<body>
+<header>
+  <nav aria-label="Main navigation">
+    <div class="logo">Solar Odyssey</div>
+    <button class="menu-toggle" aria-label="Menu" aria-controls="nav-list" aria-expanded="false">☰</button>
+    <ul id="nav-list">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#solar">Explore</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="hero">
+    <div class="container">
+      <h1>Journey Through the Cosmos</h1>
+      <p>Fly free among the planets, trace their orbits, and discover the wonders of our solar system — all from your browser.</p>
+      <button onclick="document.querySelector('#solar').scrollIntoView({behavior:'smooth'})">Start the Voyage</button>
+    </div>
+  </section>
+
+  <section id="solar">
+    <canvas id="scene"></canvas>
+    <div id="overlay">Nearest: <span id="nearest">—</span></div>
+    <button id="resetBtn">Reset View</button>
+  </section>
+
+  <section id="about">
+    <div class="container">
+      <h2>About This Experience</h2>
+      <p>Built with Three.js, the scene models the Sun and all eight planets with realistic textures and proportionate orbital speeds. A free‑flying camera lets you roam the void, hover near a world, and feel the scale of our celestial neighborhood.</p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <h2>Get In Touch</h2>
+      <p>If you’d like to learn more about the technology behind this showcase or discuss a bespoke interactive project, drop us a line.</p>
+      <form method="POST" action="mailto:studio@example.com">
+        <input type="text" name="name" placeholder="Your name" required aria-label="Name">
+        <input type="email" name="email" placeholder="Your email" required aria-label="Email">
+        <textarea name="message" rows="4" placeholder="Your message" required aria-label="Message"></textarea>
+        <button type="submit">Send Message</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© 2026 Solar Odyssey Studio. <a href="mailto:studio@example.com">studio@example.com</a></p>
+</footer>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', function () {
+  document.body.classList.add('loaded');
+
+  // ---------- GSAP page entry ----------
+  if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    gsap.from('.hero h1', {y:50, opacity:0, duration:1, ease:'power2.out'});
+    gsap.from('.hero p', {y:30, opacity:0, duration:0.8, delay:0.3});
+    gsap.from('.hero button', {scale:0.8, opacity:0, duration:0.6, delay:0.6});
+  }
+
+  // ---------- Mobile navigation ----------
+  const toggle = document.querySelector('.menu-toggle');
+  const navList = document.getElementById('nav-list');
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true' || false;
+    toggle.setAttribute('aria-expanded', !expanded);
+    navList.classList.toggle('show');
+  });
+
+  // ---------- Three.js setup ----------
+  let scene, camera, renderer, controls;
+  const canvas = document.getElementById('scene');
+  const overlay = document.getElementById('nearest');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const planetData = [
+    {name:'Mercury',size:0.38,dist:8,tex:'https://threejs.org/examples/textures/planets/mercury.jpg',speed:0.04},
+    {name:'Venus',size:0.95,dist:11,tex:'https://threejs.org/examples/textures/planets/venus.jpg',speed:0.015},
+    {name:'Earth',size:1,dist:14,tex:'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',speed:0.01},
+    {name:'Mars',size:0.53,dist:18,tex:'https://threejs.org/examples/textures/planets/mars_1k_color.jpg',speed:0.008},
+    {name:'Jupiter',size:11.2,dist:26,tex:'https://threejs.org/examples/textures/planets/jupiter.jpg',speed:0.004},
+    {name:'Saturn',size:9.45,dist:34,tex:'https://threejs.org/examples/textures/planets/saturn.jpg',speed:0.003},
+    {name:'Uranus',size:4.01,dist:40,tex:'https://threejs.org/examples/textures/planets/uranus.jpg',speed:0.002},
+    {name:'Neptune',size:3.88,dist:45,tex:'https://threejs.org/examples/textures/planets/neptune.jpg',speed:0.0015}
+  ];
+
+  try {
+    scene = new THREE.Scene();
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 20, 70);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambient);
+    const sunLight = new THREE.PointLight(0xffffff, 1.2, 0, 2);
+    scene.add(sunLight);
+
+    // Sun
+    const sunGeo = new THREE.SphereGeometry(5, 32, 32);
+    const sunMat = new THREE.MeshBasicMaterial({map:new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/sun.jpg')});
+    const sun = new THREE.Mesh(sunGeo, sunMat);
+    scene.add(sun);
+    sunLight.position.copy(sun.position);
+
+    // Planets
+    const planetGroups = [];
+    planetData.forEach(p => {
+      const group = new THREE.Object3D();
+      scene.add(group);
+      const geo = new THREE.SphereGeometry(p.size, 32, 32);
+      const tex = new THREE.TextureLoader().load(p.tex);
+      const mat = new THREE.MeshStandardMaterial({map:tex});
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(p.dist, 0, 0);
+      group.add(mesh);
+      // orbit line
+      const curve = new THREE.EllipseCurve(0,0,p.dist,p.dist,0,2*Math.PI, false, 0);
+      const points = curve.getPoints(100);
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMat = new THREE.LineBasicMaterial({color:0x888888});
+      const orbit = new THREE.Line(lineGeo, lineMat);
+      orbit.rotation.x = Math.PI/2;
+      scene.add(orbit);
+      planetGroups.push({name:p.name, mesh, group, speed:p.speed});
+    });
+
+    // Starfield (simple points)
+    const starsGeo = new THREE.BufferGeometry();
+    const starCount = 2000;
+    const positions = new Float32Array(starCount * 3);
+    for (let i=0;i<starCount;i++){
+      const r = 200;
+      const theta = THREE.MathUtils.randFloatSpread(360);
+      const phi = THREE.MathUtils.randFloatSpread(360);
+      positions[i*3] = r * Math.sin(theta) * Math.cos(phi);
+      positions[i*3+1] = r * Math.sin(theta) * Math.sin(phi);
+      positions[i*3+2] = r * Math.cos(theta);
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    const starsMat = new THREE.PointsMaterial({color:0xffffff, size:0.7});
+    const stars = new THREE.Points(starsGeo, starsMat);
+    scene.add(stars);
+
+    // Controls
+    controls = new THREE.PointerLockControls(camera, renderer.domElement);
+    const movement = {forward:false, backward:false, left:false, right:false, up:false, down:false};
+    const speed = 0.5;
+    document.addEventListener('click', () => {
+      if (!controls.isLocked) controls.lock();
+    });
+    controls.addEventListener('lock', () => { canvas.style.cursor = 'none'; });
+    controls.addEventListener('unlock', () => { canvas.style.cursor = 'crosshair'; });
+
+    const onKey = (e, down) => {
+      switch(e.code){
+        case 'KeyW': movement.forward = down;break;
+        case 'KeyS': movement.backward = down;break;
+        case 'KeyA': movement.left = down;break;
+        case 'KeyD': movement.right = down;break;
+        case 'Space': movement.up = down;break;
+        case 'ShiftLeft': movement.down = down;break;
+      }
+    };
+    window.addEventListener('keydown', e=>onKey(e,true));
+    window.addEventListener('keyup', e=>onKey(e,false));
+
+    // Reset view
+    resetBtn.addEventListener('click', ()=>{
+      camera.position.set(0,20,70);
+      controls.getObject().position.set(0,20,70);
+    });
+
+    // Resize handling
+    window.addEventListener('resize', ()=>{
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth,window.innerHeight);
+    });
+
+    // Animation loop
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const delta = clock.getDelta();
+
+      // planet orbits
+      planetGroups.forEach(p=>{
+        p.group.rotation.y += p.speed * delta;
+        p.mesh.rotation.y += 0.2 * delta; // spin
+      });
+
+      // camera movement
+      const direction = new THREE.Vector3();
+      if (movement.forward) direction.z -= 1;
+      if (movement.backward) direction.z += 1;
+      if (movement.left) direction.x -= 1;
+      if (movement.right) direction.x += 1;
+      if (movement.up) direction.y += 1;
+      if (movement.down) direction.y -= 1;
+      direction.normalize().multiplyScalar(speed);
+      controls.moveRight(direction.x);
+      controls.moveForward(direction.z);
+      camera.position.y += direction.y;
+
+      // nearest planet
+      let nearest = null, minDist = Infinity;
+      planetGroups.forEach(p=>{
+        const d = camera.position.distanceTo(p.mesh.getWorldPosition(new THREE.Vector3()));
+        if (d < minDist) {minDist = d; nearest = p.name;}
+      });
+      overlay.textContent = nearest ? nearest : '—';
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    };
+    animate();
+
+  } catch (e) {
+    console.error('WebGL init failed:', e);
+    const msg = document.createElement('div');
+    msg.style.position='absolute';
+    msg.style.top='50%';
+    msg.style.width='100%';
+    msg.style.textAlign='center';
+    msg.style.color='var(--color-text)';
+    msg.textContent='Your browser does not support WebGL. The rest of the site is still accessible.';
+    document.body.appendChild(msg);
+  }
+});
+</script>
+</body>
+</html>
