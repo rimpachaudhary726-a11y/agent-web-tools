@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solaris — Interactive 2D Solar System Demo</title>
+<meta name="description" content="Explore the solar system in real time. Fly close to the planets, see their textures, and learn their names.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --color-primary:#0d47a1;
+  --color-accent:#ff6f00;
+  --color-bg:#f0f4ff;
+  --color-text:#212121;
+  --font-display:'Orbitron',sans-serif;
+  --font-body:'Roboto',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --color-primary:#a5c9ff;
+    --color-accent:#ffb04c;
+    --color-bg:#1a1f2b;
+    --color-text:#e0e0e0;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-family:var(--font-body);color:var(--color-text);scroll-behavior:smooth;}
+body{
+  background:var(--color-bg);
+  opacity:0;
+  animation:fadeIn 0.6s forwards ease-out;
+  animation-delay:0.2s;
+}
+@keyframes fadeIn{
+  to{opacity:1;}
+}
+h1,h2,h3{font-family:var(--font-display);line-height:1.2;}
+a{color:var(--color-primary);text-decoration:none;transition:color .2s;}
+a:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
+button{
+  cursor:pointer;
+  font:inherit;
+  border:none;
+  background:var(--color-primary);
+  color:#fff;
+  padding:.6rem 1.2rem;
+  border-radius:.4rem;
+  transition:background .2s;
+  min-height:44px;
+  min-width:44px;
+}
+button:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
+button:hover{background:var(--color-accent);}
+header{
+  position:fixed;top:0;left:0;right:0;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);
+  background:var(--color-bg);
+  z-index:10;
+}
+nav{
+  max-width:1200px;margin:auto;padding:.8rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+nav .logo{font-size:1.5rem;font-family:var(--font-display);color:var(--color-primary);}
+nav ul{list-style:none;display:flex;gap:1.5rem;}
+nav ul li a{
+  font-weight:500;
+  padding:.6rem .8rem;
+  display:inline-block;
+  min-height:44px;
+  line-height:1.2;
+}
+nav .menu-toggle{display:none;background:none;color:var(--color-primary);font-size:1.5rem;}
+@media(max-width:768px){
+  nav ul{
+    position:absolute;top:100%;right:0;background:var(--color-bg);flex-direction:column;gap:0;min-width:200px;display:none;box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
+  nav ul.show{display:flex;}
+  nav .menu-toggle{display:block;}
+}
+@media (max-width:375px){
+  nav .logo{font-size:1.2rem;}
+  nav ul li a{padding:.5rem .8rem;}
+  .hero h1{font-size:clamp(2rem,10vw,4rem);}
+  .hero p{font-size:clamp(0.9rem,4vw,1.3rem);}
+}
+@media (min-width:1440px){
+  body{font-size:1.1rem;}
+  header{padding:0 2rem;}
+  nav{padding:.8rem 2rem;}
+  section{padding:8rem 2rem;}
+}
+section{padding:6rem 1rem;max-width:1200px;margin:auto;}
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,var(--color-primary),var(--color-accent));color:#fff;
+}
+.hero h1{font-size:clamp(2.5rem,8vw,5rem);}
+.hero p{font-size:clamp(1rem,2.5vw,1.5rem);margin:1rem 0 2rem;}
+.hero button{
+  background:#fff;color:var(--color-primary);
+}
+.demo{position:relative;height:80vh;overflow:hidden;}
+#solarCanvas{width:100%;height:100%;display:block;}
+#overlay{
+  position:fixed;bottom:1rem;right:1rem;background:rgba(0,0,0,.6);
+  color:#fff;padding:.8rem 1rem;border-radius:.5rem;z-index:20;
+  display:flex;align-items:center;gap:.8rem;
+}
+#overlay button{
+  background:var(--color-accent);
+}
+footer{
+  background:var(--color-primary);color:#fff;padding:2rem 1rem;text-align:center;
+}
+footer a{color:#fff;}
+</style>
+<meta property="og:title" content="Solaris — Interactive 2D Solar System Demo">
+<meta property="og:description" content="Explore the solar system in real time. Fly close to the planets, see their textures, and learn their names.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_5/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Solaris — Interactive 2D Solar System Demo">
+<meta name="twitter:description" content="Explore the solar system in real time. Fly close to the planets, see their textures, and learn their names.">
+<link rel="canonical" href="https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_5/">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Solaris \u2014 Interactive 2D Solar System Demo", "description": "Explore the solar system in real time. Fly close to the planets, see their textures, and learn their names.", "url": "https://rimpachaudhary726-a11y.github.io/agent-web-tools/tool_web_5/"}</script>
+</head>
+<body>
+<header>
+  <nav aria-label="Main navigation">
+    <div class="logo">Solaris</div>
+    <button class="menu-toggle" aria-controls="nav-list" aria-expanded="false">☰</button>
+    <ul id="nav-list">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="hero">
+    <h1>Travel the Solar System</h1>
+    <p>Fly through space, orbit the planets, and discover their surfaces up close—all from your browser.</p>
+    <a href="#demo"><button>Launch Demo</button></a>
+  </section>
+
+  <section id="about">
+    <h2>About the Experience</h2>
+    <p>
+      Built with Three.js, our interactive solar system visualises the eight planets with authentic textures, orbital paths and a star‑filled background. 
+      Use <kbd>W</kbd>/<kbd>S</kbd>/<kbd>A</kbd>/<kbd>D</kbd> to move and the mouse to look around – just like a pilot in a spaceship.
+    </p>
+  </section>
+
+  <section id="demo" class="demo">
+    <canvas id="solarCanvas"></canvas>
+    <div id="overlay">
+      Nearest: <strong id="nearest-planet">Sun</strong>
+      <button id="resetBtn">Reset View</button>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Get in Touch</h2>
+    <p>We love to hear from explorers and developers alike.</p>
+    <form method="POST" action="mailto:info@solaris-demo.com">
+      <label for="email">Your email</label><br>
+      <input type="email" id="email" name="email" required style="padding:.5rem;width:100%;max-width:300px;margin: .5rem 0;"><br>
+      <button type="submit">Send Message</button>
+    </form>
+  </section>
+</main>
+
+<footer>
+  © 2026 Solaris. All rights reserved. <a href="mailto:info@solaris-demo.com">info@solaris-demo.com</a>
+</footer>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<script defer>
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // ------- Navigation toggle ----------
+  const toggleBtn = document.querySelector('.menu-toggle');
+  const navList = document.getElementById('nav-list');
+  toggleBtn.addEventListener('click',()=>{
+    const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    toggleBtn.setAttribute('aria-expanded',!expanded);
+    navList.classList.toggle('show');
+  });
+
+  // ------- GSAP scroll animations ----------
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    gsap.utils.toArray('section').forEach(sec=>{
+      gsap.from(sec,{scrollTrigger:{trigger:sec,start:'top 80%'},y:50,opacity:0,duration:1, ease:'power2.out'});
+    });
+  }
+
+  // ------- Three.js Solar System ----------
+  const canvas = document.getElementById('solarCanvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+
+  const fov=60, aspect=canvas.clientWidth / canvas.clientHeight, near=0.1, far=2000;
+  const camera = new THREE.PerspectiveCamera(fov,aspect,near,far);
+  const initCamPos = new THREE.Vector3(0,50,200);
+  camera.position.copy(initCamPos);
+  camera.lookAt(0,0,0);
+
+  // Light
+  const ambient = new THREE.AmbientLight(0xffffff,0.6);
+  scene.add(ambient);
+  const sunLight = new THREE.PointLight(0xffffff,1.5,0,2);
+  scene.add(sunLight);
+
+  // Starfield
+  const starTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/galaxy_starfield.png');
+  const starGeo = new THREE.SphereGeometry(900,64,64);
+  const starMat = new THREE.MeshBasicMaterial({map:starTexture, side:THREE.BackSide});
+  const starSphere = new THREE.Mesh(starGeo, starMat);
+  scene.add(starSphere);
+
+  // Planet data
+  const planetDefs = [
+    {name:'Mercury',size:2.4,dist:20,period:88, texture:'https://threejs.org/examples/textures/planets/mercury.jpg'},
+    {name:'Venus',size:6,dist:30,period:225, texture:'https://threejs.org/examples/textures/planets/venus.jpg'},
+    {name:'Earth',size:6.4,dist:40,period:365, texture:'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'},
+    {name:'Mars',size:3.4,dist:50,period:687, texture:'https://threejs.org/examples/textures/planets/mars_1k_color.jpg'},
+    {name:'Jupiter',size:14,dist:70,period:4333, texture:'https://threejs.org/examples/textures/planets/jupiter.jpg'},
+    {name:'Saturn',size:12,dist:90,period:10759, texture:'https://threejs.org/examples/textures/planets/saturn.jpg'},
+    {name:'Uranus',size:10,dist:110,period:30685, texture:'https://threejs.org/examples/textures/planets/uranus.jpg'},
+    {name:'Neptune',size:10,dist:130,period:60190, texture:'https://threejs.org/examples/textures/planets/neptune.jpg'}
+  ];
+
+  const planetGroup = new THREE.Group();
+  scene.add(planetGroup);
+  const planetMeshes = [];
+
+  // Sun
+  const sunGeo = new THREE.SphereGeometry(12,32,32);
+  const sunMat = new THREE.MeshBasicMaterial({map:new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/sun.jpg')});
+  const sunMesh = new THREE.Mesh(sunGeo,sunMat);
+  planetGroup.add(sunMesh);
+  planetMeshes.push({name:'Sun',mesh:sunMesh});
+
+  // Create planets
+  planetDefs.forEach(p=>{
+    const pivot = new THREE.Object3D();
+    planetGroup.add(pivot);
+    const geo = new THREE.SphereGeometry(p.size,32,32);
+    const tex = new THREE.TextureLoader().load(p.texture);
+    const mat = new THREE.MeshStandardMaterial({map:tex});
+    const mesh = new THREE.Mesh(geo,mat);
+    mesh.position.set(p.dist,0,0);
+    pivot.add(mesh);
+    // orbit line
+    const orbitCurve = new THREE.EllipseCurve(0,0,p.dist,p.dist,0,2*Math.PI, false,0);
+    const points = orbitCurve.getPoints(128);
+    const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const orbitMat = new THREE.LineBasicMaterial({color:0x888888});
+    const orbitLine = new THREE.LineLoop(orbitGeo,orbitMat);
+    scene.add(orbitLine);
+    // store for animation
+    planetMeshes.push({name:p.name, mesh:mesh, pivot:pivot, period:p.period});
+  });
+
+  // Resize handling
+  function onWindowResize(){
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h, false);
+  }
+  window.addEventListener('resize',onWindowResize);
+  onWindowResize();
+
+  // Controls
+  const move = {forward:false,back:false,left:false,right:false};
+  const speed = 0.6;
+  document.addEventListener('keydown',e=>{
+    switch(e.code){
+      case 'KeyW': move.forward=true; break;
+      case 'KeyS': move.back=true; break;
+      case 'KeyA': move.left=true; break;
+      case 'KeyD': move.right=true; break;
+    }
+  });
+  document.addEventListener('keyup',e=>{
+    switch(e.code){
+      case 'KeyW': move.forward=false; break;
+      case 'KeyS': move.back=false; break;
+      case 'KeyA': move.left=false; break;
+      case 'KeyD': move.right=false; break;
+    }
+  });
+  // Pointer lock for mouse look
+  canvas.addEventListener('click',()=>{canvas.requestPointerLock();});
+  document.addEventListener('pointerlockchange',()=>{ 
+    if(document.pointerLockElement===canvas){ 
+      document.addEventListener('mousemove',onMouseMove);
+    } else {
+      document.removeEventListener('mousemove',onMouseMove);
+    }
+  });
+  function onMouseMove(e){
+    const movementX=e.movementX||0;
+    const movementY=e.movementY||0;
+    camera.rotation.y -= movementX * 0.002;
+    camera.rotation.x -= movementY * 0.002;
+    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+  }
+
+  // Nearest planet UI
+  const nearestEl=document.getElementById('nearest-planet');
+  function updateNearest(){
+    let nearest='Sun';
+    let minDist=Infinity;
+    planetMeshes.forEach(p=>{
+      const worldPos = new THREE.Vector3();
+      p.mesh.getWorldPosition(worldPos);
+      const d = camera.position.distanceTo(worldPos);
+      if(d<minDist){
+        minDist=d;
+        nearest=p.name;
+      }
+    });
+    nearestEl.textContent=nearest;
+  }
+
+  // Reset view
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    camera.position.copy(initCamPos);
+    camera.rotation.set(0,0,0);
+  });
+
+  // Animation loop
+  const clock = new THREE.Clock();
+  function animate(){
+    const delta=clock.getDelta();
+    // rotate planets around sun
+    planetMeshes.forEach(p=>{
+      if(p.pivot){
+        const orbitSec = (p.period/365)*30; // Earth =30s
+        const angularSpeed = (2*Math.PI)/orbitSec;
+        p.pivot.rotation.y += angularSpeed * delta;
+      }
+    });
+    // camera movement
+    const direction = new THREE.Vector3();
+    if(move.forward) direction.z -= 1;
+    if(move.back) direction.z += 1;
+    if(move.left) direction.x -= 1;
+    if(move.right) direction.x += 1;
+    direction.normalize().applyEuler(camera.rotation);
+    camera.position.addScaledVector(direction, speed);
+    // Update UI
+    updateNearest();
+    renderer.render(scene,camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+});
+</script>
+</body>
+</html>
